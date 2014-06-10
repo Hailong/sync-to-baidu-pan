@@ -14,6 +14,8 @@ class sync
 
     protected $pcs;
 
+    protected $counter;
+
     public function __construct($refresh_token, $access_token, $sync_path, $remote_dir)
     {
         $this->refresh_token = $refresh_token;
@@ -22,10 +24,14 @@ class sync
         $this->remote_dir = $remote_dir;
 
         $this->pcs = new BaiduPCS($access_token);
+
+        $this->counter = 0;
     }
 
     protected function uploadFile($filename, $dir, $remoteDir)
     {
+        echo '......uploading file ' . $dir . '/' . $filename . '    ' . ++$this->counter . "\n";
+
         $blockSize = 1932735283;
         $fileSize = filesize($dir . '/' . $filename);
 
@@ -121,7 +127,6 @@ class sync
                 }
             }
 
-            echo '......uploading file ' . $dir . '/' . $file . "\n";
             $this->uploadFile($file, $dir, $remoteDir);
         }
 
@@ -139,7 +144,7 @@ class sync
 $refresh_token = readline('Step 1. Input refresh_token: ');
 $access_token = readline('Step 2. Input access_token: ');
 $sync_path = readline('Step 3. Path to sync: ');
-$remote_dir = readline('Step4. Remote directory name: ');
+$remote_dir = readline('Step 4. Remote directory name: ');
 
 //$refresh_token = 'a';
 //$access_token = '';
