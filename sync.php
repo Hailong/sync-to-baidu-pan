@@ -53,7 +53,7 @@ class sync
             $filesBlock = array();
 
             while (!feof($handle)) {
-                $temp = $pcs->upload(fread($handle, $blockSize), $remoteDir, $filename, $filename, TRUE);
+                $temp = $pcs->upload(fread($handle, $blockSize), $remoteDir . '/', $filename, $filename, TRUE);
                 if (!is_array($temp)) {
                     $temp = json_decode($temp, true);
                 }
@@ -67,7 +67,7 @@ class sync
                 foreach ($filesBlock as $value) {
                     array_push($params, $value['md5']);
                 }
-                $result = $pcs->createSuperFile($remoteDir, $filename, $params, $filename);
+                $result = $pcs->createSuperFile($remoteDir . '/', $filename, $params);
                 echo $result;
             }
         }
