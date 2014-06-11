@@ -190,7 +190,7 @@ class BaiduPCS {
 	 * @return string
 	 */
 	public function listFiles($path, $by = 'name', $order = 'asc', $limit = '0-9') {
-		$result = $this->_baseControl ( 'file?method=list' . '&access_token=' . $this->_accessToken, array ('path' => $path, 'by' => $by, 'order' => $order, 'limit' => $limit ) );
+		$result = $this->_baseControl ( 'file?method=list' . '&access_token=' . $this->_accessToken, array ('path' => $path, 'by' => $by, 'order' => $order/*, 'limit' => $limit*/ ) );
 		return $result;
 	}
 

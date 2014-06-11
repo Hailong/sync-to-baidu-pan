@@ -32,7 +32,8 @@ class sync
     {
         echo '......uploading file ' . $dir . '/' . $filename . '    ' . ++$this->counter . "\n";
 
-        $blockSize = 1932735283;
+        //$blockSize = 1932735283;
+        $blockSize = 100000000;
         $fileSize = filesize($dir . '/' . $filename);
 
         if ($fileSize == 0) {
