@@ -30,8 +30,6 @@ class sync
 
     protected function uploadFile($filename, $dir, $remoteDir)
     {
-        echo '......uploading file ' . $dir . '/' . $filename . '    ' . ++$this->counter . "\n";
-
         //$blockSize = 1932735283;
         $blockSize = 100000000;
         $fileSize = filesize($dir . '/' . $filename);
@@ -40,43 +38,50 @@ class sync
             return;
         }
 
+        echo '......uploading file ' . $dir . '/' . $filename . '    ' . ++$this->counter . "\n";
+
         $handle = fopen($dir . '/' . $filename, 'rb');
+        $result = NULL;
 
-        if ($fileSize < $blockSize) {
-            $fileContent = fread($handle, $fileSize);
+        try {
+            if ($fileSize < $blockSize) {
+                $fileContent = fread($handle, $fileSize);
+                $result = $this->pcs->upload($fileContent, $remoteDir . '/', $filename);
+            } else {
+                $filesBlock = array();
 
-            $result = $this->pcs->upload($fileContent, $remoteDir . '/', $filename);
-            fclose($handle);
-
-            print_r($result);
-            echo "\n";
-        } else {
-            $filesBlock = array();
-
-            while (!feof($handle)) {
-                $temp = $this->pcs->upload(fread($handle, $blockSize), $remoteDir . '/', $filename, $filename, TRUE);
-                if (!is_array($temp)) {
-                    $temp = json_decode($temp, true);
+                while (!feof($handle)) {
+                    $temp = $this->pcs->upload(fread($handle, $blockSize), $remoteDir . '/', $filename, $filename, TRUE);
+                    if (!is_array($temp)) {
+                        $temp = json_decode($temp, true);
+                    }
+                    print_r($temp);
+                    echo "\n";
+                    array_push($filesBlock, $temp);
                 }
-                array_push($filesBlock, $temp);
-            }
 
-            fclose($handle);
-
-            if (count($filesBlock) > 1) {
-                $params = array();
-                foreach ($filesBlock as $value) {
-                    array_push($params, $value['md5']);
+                if (count($filesBlock) > 1) {
+                    $params = array();
+                    foreach ($filesBlock as $value) {
+                        array_push($params, $value['md5']);
+                    }
+                    $result = $this->pcs->createSuperFile($remoteDir . '/', $filename, $params);
                 }
-                $result = $this->pcs->createSuperFile($remoteDir . '/', $filename, $params);
-                echo $result;
             }
+        } catch (Exception $e) {
+            echo 'Caught exception: ',  $e->getMessage(), "\n";
         }
 
+        fclose($handle);
+
+        print_r($result);
+        echo "\n";
     }
 
-    protected function syncDir($dir, $remoteDir, $force = FALSE)
+    protected function syncDir($dir, $remoteDir, $force = FALSE, $existingDir = FALSE)
     {
+        echo '......scanning directory ' . $dir . ' force=' . $force . "\n";
+
         $files = array();
         $dirs = array();
 
@@ -98,13 +103,14 @@ class sync
         if ($force) {
             $result = $this->pcs->makeDirectory($remoteDir);
         } else {
-            $result = $this->pcs->getMeta($remoteDir);
-            $result = json_decode($result);
+            if (!$existingDir) {
+                $result = $this->pcs->getMeta($remoteDir);
+                $result = json_decode($result);
 
-            if (isset($result->error_code) && $result->error_code == '31066') {
-                $this->syncDir($dir, $remoteDir, TRUE);
-
-                return;
+                if (isset($result->error_code) && $result->error_code == '31066') {
+                    $this->syncDir($dir, $remoteDir, TRUE);
+                    return;
+                }
             }
 
             $result = $this->pcs->listFiles($remoteDir);
@@ -132,7 +138,7 @@ class sync
         }
 
         foreach ($dirs as $item) {
-            $this->syncDir($dir . '/' . $item, $remoteDir . '/' . $item, $force);
+            $this->syncDir($dir . '/' . $item, $remoteDir . '/' . $item, $force, array_key_exists($remoteDir . '/' . $item, $paths));
         }
     }
 
