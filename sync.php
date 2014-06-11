@@ -99,6 +99,7 @@ class sync
         }
 
         $paths = array();
+        $dirPaths = array();
 
         if ($force) {
             $result = $this->pcs->makeDirectory($remoteDir);
@@ -121,7 +122,11 @@ class sync
             }
 
             foreach ($result->list as $obj) {
-                $paths[$obj->path] = $obj->size;
+                if ($obj->isdir == '1') {
+                    $dirPaths[$obj->path] = $obj->size;
+                } else {
+                    $paths[$obj->path] = $obj->size;
+                }
             }
         }
 
@@ -138,7 +143,7 @@ class sync
         }
 
         foreach ($dirs as $item) {
-            $this->syncDir($dir . '/' . $item, $remoteDir . '/' . $item, $force, array_key_exists($remoteDir . '/' . $item, $paths));
+            $this->syncDir($dir . '/' . $item, $remoteDir . '/' . $item, $force, array_key_exists($remoteDir . '/' . $item, $dirPaths));
         }
     }
 
