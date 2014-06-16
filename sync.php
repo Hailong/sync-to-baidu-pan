@@ -110,6 +110,7 @@ class sync
 
                 if (isset($result->error_code) && $result->error_code == '31066') {
                     $this->syncDir($dir, $remoteDir, TRUE);
+
                     return;
                 }
             }
@@ -153,10 +154,21 @@ class sync
     }
 }
 
-$refresh_token = readline('Step 1. Input refresh_token: ');
-$access_token = readline('Step 2. Input access_token: ');
-$sync_path = readline('Step 3. Path to sync: ');
-$remote_dir = readline('Step 4. Remote directory name: ');
+if (count($argv) == 5) {
+
+    $refresh_token = $argv[1];
+    $access_token = $argv[2];
+    $sync_path = $argv[3];
+    $remote_dir = $argv[4];
+
+} else {
+
+    $refresh_token = readline('Step 1. Input refresh_token: ');
+    $access_token = readline('Step 2. Input access_token: ');
+    $sync_path = readline('Step 3. Path to sync: ');
+    $remote_dir = readline('Step 4. Remote directory name: ');
+
+}
 
 //$refresh_token = 'a';
 //$access_token = '';
